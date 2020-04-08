@@ -63,16 +63,58 @@ class TinderBot():
         
         profile_data = {}
 
-        # Profile Pic URL
-        try:
-            profile_pic_elem = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div/div[1]/div/div/div')
-            profile_pic_contents = profile_pic_elem.get_attribute('style')
-            profile_pic_url = profile_pic_contents.split('"')[1]
-        except:
-            print('Failed to get Profile Pic URL')
-            profile_pic_url = None
+        images = set()
 
-        profile_data['profile_pic_url'] = profile_pic_url
+        slideshow = self.driver.find_element_by_class_name('react-swipeable-view-container')
+        num_images = len(slideshow.find_elements_by_tag_name('div'))-3
+        print('NUMBER OF IMAGES FOUND: '+str(num_images))
+        for _ in range(num_images):
+            self.next_image()
+            sleep(0.25)
+            all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
+            print("images in loop: "+ str(len(all_image)))
+            for each in all_image:
+                url = each.get_attribute('style').split('"')[1]
+                print(url)
+                images.add(url)
+        print(len(images))
+        profile_data['profile_pic_urls'] = images
+        
+
+
+
+        # images = set()
+        # for _ in range(10):
+        #     image = self.driver.find_element_by_class_name('profileCard__slider__img').get_attribute('style').split('"')[1]
+        #     print(image)
+        #     images.add(image)
+        #     self.next_image()
+        #     sleep(1)
+
+        # print(len(images))
+        # profile_data['profile_pic_urls'] = images
+        
+        # profile_pic_container_elem = self.driver.find_element_by_css_selector('#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.react-aspect-ratio-placeholder > span > a.profileCard__slider__backLink > div > div.Animdur\(\$fast\).Animtf\(eio\).profileCard__slider.Pos\(a\).W\(100\%\).Ta\(start\) > div')
+        # profile_pic_image_elements = profile_pic_container_elem.find_elements_by_class_name('profileCard__slider__img')
+        # images = []
+        # for each in profile_pic_image_elements:
+        #     image = each.get_attribute('style').split('"')[1]
+        #     print(image)
+        #     images.append(image)
+            
+        # print(len(images))
+        # profile_data['profile_pic_urls'] = images
+
+        # # Profile Pic URL
+        # try:
+        #     profile_pic_elem = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div/div[1]/div/div/div')
+        #     profile_pic_contents = profile_pic_elem.get_attribute('style')
+        #     profile_pic_url = profile_pic_contents.split('"')[1]
+        # except:
+        #     print('Failed to get Profile Pic URL')
+        #     profile_pic_url = None
+
+        # profile_data['profile_pic_url'] = profile_pic_url
 
         # Profile Name
         try:
@@ -108,7 +150,7 @@ class TinderBot():
             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\)'
             info_table = self.driver.find_element_by_css_selector(css_path)
             info_rows = info_table.find_elements_by_class_name('Row')
-            print(len(info_rows))
+            print(str(len(info_rows))+" - INFO ELEMENTS")
             for i,row in enumerate(info_rows):
                 path_elem = row.find_element_by_tag_name('path')
                 iterable_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\) > div:nth-child({}) > div.Us\(t\).Va\(m\).D\(ib\).My\(2px\).NetWidth\(100\%\,20px\).C\(\$c-secondary\)'.format(i+1)
@@ -138,45 +180,6 @@ class TinderBot():
         except:
             print('Profile Info BROKEN')
 
-    
-
-
-
- 
-#         # Profile Job
-#         try:
-#             #content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\) > div:nth-child(1) > div.Mend\(4px\).D\(ib\).Va\(t\) > svg > g > path
-#             #content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\) > div:nth-child(2) > div.Mend\(4px\).D\(ib\).Va\(t\) > svg > path
-#             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div > div > div.Fz\(\$ms\) > div:nth-child(1) > div.Us\(t\).Va\(m\).D\(ib\).My\(2px\).NetWidth\(100\%\,20px\).C\(\$c-secondary\)'
-#             profile_job_elem = self.driver.find_element_by_css_selector(css_path)
-#             profile_job = profile_job_elem.text
-#         except:
-#             print('Failed to get Job')
-#             profile_job = None
-
-#         profile_data['job'] = profile_job
-
-#         # Profile City
-#         try:
-#             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div > div > div.Fz\(\$ms\) > div:nth-child(2) > div.Us\(t\).Va\(m\).D\(ib\).My\(2px\).NetWidth\(100\%\,20px\).C\(\$c-secondary\).Ell'
-#             profile_city_elem = self.driver.find_element_by_css_selector(css_path)
-#             profile_city = profile_name_elem.text
-#         except:
-#             print('Failed to get City')
-#             profile_city = None
-
-#         profile_data['city'] = profile_city
-
-#         # Profile College
-#         try:
-#             css_path = 'content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\) > div > div.Us\(t\).Va\(m\).D\(ib\).My\(2px\).NetWidth\(100\%\,20px\).C\(\$c-secondary\)'
-#             profile_college_elem = self.driver.find_element_by_css_selector(css_path)
-#             profile_college = profile_college_elem.text
-#         except:
-#             print('Failed to get College')
-#             profile_college = None
-
-#         profile_data['college'] = profile_college
 
 #         # Profile Details
 #         try:
@@ -203,6 +206,9 @@ class TinderBot():
 
     def dislike_key(self):
         ActionChains(self.driver).send_keys(Keys.ARROW_LEFT).perform()
+
+    def next_image(self):
+        ActionChains(self.driver).send_keys(Keys.SPACE).perform()
 
     def like(self):
         like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/div[4]/button')
