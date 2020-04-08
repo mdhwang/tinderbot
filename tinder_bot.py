@@ -44,12 +44,12 @@ class TinderBot():
         login_btn = self.driver.find_element_by_xpath('//*[@id="u_0_0"]')
         login_btn.click()
 
-        sleep(3)
+        sleep(2)
         # switch to original window
 
         self.driver.switch_to.window(base_window)
 
-        sleep(3)
+        sleep(1)
 
         loc_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]')
         loc_popup.click()
@@ -58,13 +58,43 @@ class TinderBot():
         notif_popup.click()
 
     def profile_scrape(self):
-        pass
+        self.open_profile()
+        
+        profile_data = {}
+
+        # Profile Pic URL
+        try:
+            profile_pic_elem = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div/div[1]/div/div/div')
+            profile_pic_contents = profile_pic_elem.get_attribute('style')
+            profile_pic_url = profile_pic_contents.split('"')[1]
+        except:
+            print('Failed to get Profile Pic URL')
+            profile_pic_url = None
+
+        profile_data['profile_pic_url'] = profile_pic_url
+
+        # Profile Name
+        try:
+            css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.My\(2px\).C\(\$c-base\).Us\(t\).D\(f\).Ai\(b\).Maw\(90\%\) > div > h1'
+            profile_name_elem = self.driver.find_element_by_css_selector(css_path)
+            profile_name = profile_name_elem.text
+        except:
+            print('Failed to get Name')
+            profile_name = None
+        profile_data['name'] = profile_name
+
+        print('DATA SO FAR')
+        print(profile_data)
+        
 
     def open_profile(self):
         ActionChains(self.driver).send_keys(Keys.ARROW_UP).perform()
 
+    def like_key(self):
+        ActionChains(self.driver).send_keys(Keys.ARROW_RIGHT).perform()
 
-
+    def dislike_key(self):
+        ActionChains(self.driver).send_keys(Keys.ARROW_LEFT).perform()
 
     def like(self):
         like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/div[4]/button')
