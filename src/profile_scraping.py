@@ -1,84 +1,50 @@
 from selenium import webdriver
-import sys
-sys.path.append('/Users/matthewhwang/Documents/Resources')
-from login import username, password
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from src.profile_scraping import *
 
-class TinderBot():
-    def __init__(self):
-        self.driver = webdriver.Chrome('/Users/matthewhwang/Documents/GitHub/chromedriver')
-
-    def login(self):
-        self.driver.get('https://tinder.com')
-
-        sleep(3)
-        
-        try:
-            string = "//button[contains(.,'More Options')]"
-            moreops = self.driver.find_element_by_xpath(string)
-            moreops.click()
-            sleep(0.25)
-            fb_path = '//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[3]/button'
-            fb_btn = self.driver.find_element_by_xpath(fb_path)
-            fb_btn.click()
-        except:
-            fb_path = '//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[2]/button'
-            fb_btn = self.driver.find_element_by_xpath(fb_path)
-            fb_btn.click()       
-
-        # switch to login popup
-        base_window = self.driver.window_handles[0]
-        popup = self.driver.window_handles[1]
-        self.driver.switch_to.window(popup)
-
-        sleep(0.5)
-
-        email_in = self.driver.find_element_by_xpath('//*[@id="email"]')
-        email_in.send_keys(username)
-
-        pw_in = self.driver.find_element_by_xpath('//*[@id="pass"]')
-        pw_in.send_keys(password)
+def profile_pic_urls(page):
+    images = set()
+    slideshow = page.find_element_by_class_name('react-swipeable-view-container')
+    num_images = len(slideshow.find_elements_by_tag_name('div'))-3
+    print('NUMBER OF IMAGES FOUND: '+str(num_images))
+    for _ in range(num_images):
+        self.next_image()
+        sleep(0.25)
+        all_image = page.find_elements_by_class_name('profileCard__slider__img')
+        print("images in loop: "+ str(len(all_image)))
+        print("---STARTLOOP---")
+        for each in all_image:
+            print(each.get_attribute('style'))
+            url = each.get_attribute('style').split('"')[1]
+            print(url)
+            images.add(url)
+    print(len(images))
+    return list(images)
 
 
-        login_btn = self.driver.find_element_by_xpath('//*[@id="u_0_0"]')
-        login_btn.click()
-
-        sleep(2)
-        # switch to original window
-
-        self.driver.switch_to.window(base_window)
-
-        sleep(1)
-
-        loc_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]')
-        loc_popup.click()
-
-        notif_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]')
-        notif_popup.click()
-
-    def profile_scrape(self):
+def profile_scrape2(self):
         self.open_profile()
         
         profile_data = {}
 
-        # Profile Picture URLs
-        try:
-            images = set()
-            slideshow = self.driver.find_element_by_class_name('react-swipeable-view-container')
-            num_images = len(slideshow.find_elements_by_tag_name('div'))-3
-            for _ in range(num_images):
-                self.next_image()
-                sleep(0.25)
-                all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
-                for each in all_image:
-                    url = each.get_attribute('style').split('"')[1]
-                    images.add(url)
-        except:
-            images = None
+        images = set()
 
+        slideshow = self.driver.find_element_by_class_name('react-swipeable-view-container')
+        num_images = len(slideshow.find_elements_by_tag_name('div'))-3
+        print('NUMBER OF IMAGES FOUND: '+str(num_images))
+        for _ in range(num_images):
+            self.next_image()
+            sleep(0.25)
+            all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
+            print("images in loop: "+ str(len(all_image)))
+            print("---STARTLOOP---")
+            for each in all_image:
+                print(each.get_attribute('style'))
+                url = each.get_attribute('style').split('"')[1]
+                print(url)
+                images.add(url)
+        print(len(images))
         profile_data['profile_pic_urls'] = list(images)
     
 
@@ -88,6 +54,7 @@ class TinderBot():
             profile_name_elem = self.driver.find_element_by_css_selector(css_path)
             profile_name = profile_name_elem.text
         except:
+            print('Failed to get Name')
             profile_name = None
 
         profile_data['name'] = profile_name
@@ -98,6 +65,7 @@ class TinderBot():
             profile_age_elem = self.driver.find_element_by_css_selector(css_path)
             profile_age = profile_age_elem.text
         except:
+            print('Failed to get Age')
             profile_age = None
 
         profile_data['age'] = profile_age
@@ -114,37 +82,51 @@ class TinderBot():
             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\)'
             info_table = self.driver.find_element_by_css_selector(css_path)
             info_rows = info_table.find_elements_by_class_name('Row')
+            print(str(len(info_rows))+" - INFO ELEMENTS")
             for i,row in enumerate(info_rows):
                 path_elem = row.find_element_by_tag_name('path')
                 iterable_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\) > div:nth-child({}) > div.Us\(t\).Va\(m\).D\(ib\).My\(2px\).NetWidth\(100\%\,20px\).C\(\$c-secondary\)'.format(i+1)
                 content = row.find_element_by_css_selector(iterable_path).text
                 if path_elem.get_attribute('d') == college_icon:
+                    print("FOUND COLLEGE")
                     profile_data['college'] = content
 
                 if path_elem.get_attribute('d') == job_icon:
+                    print("FOUND JOB")
                     profile_data['job'] = content
 
                 if path_elem.get_attribute('d') == city_icon:
+                    print("FOUND CITY")
                     profile_data['city'] = content
 
                 if path_elem.get_attribute('d') == gender_icon:
+                    print("FOUND GENDER")
                     profile_data['gender'] = content
 
                 if path_elem.get_attribute('d') == location_icon:
+                    print("FOUND DISTANCE")
                     profile_data['distance'] = content
+
+                
+
         except:
-            pass
+            print('Profile Info BROKEN')
 
 
         # Profile Details
         try:
+            print("---TRYING FOR DETAILS---")
             details_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.P\(16px\).Ta\(start\).Us\(t\).C\(\$c-secondary\).BreakWord.Whs\(pl\).Fz\(\$ms\)'
             profile_details_elem = self.driver.find_element_by_css_selector(details_path)
+            print('Got details container')
             contents = profile_details_elem.find_elements_by_tag_name('span')
+            print(len(contents))
             details = ""
             for each in contents:
+                print(each.text)
                 details += (each.text + " ")
         except:
+            print('Failed to get Details')
             details = None
 
         profile_data['details'] = details
@@ -163,104 +145,8 @@ class TinderBot():
         except:
             pass
 
+
+
+        print('DATA SO FAR')
+        print(profile_data)
         self.like_key()
-
-    def open_profile(self):
-        ActionChains(self.driver).send_keys(Keys.ARROW_UP).perform()
-
-    def like_key(self):
-        ActionChains(self.driver).send_keys(Keys.ARROW_RIGHT).perform()
-
-    def dislike_key(self):
-        ActionChains(self.driver).send_keys(Keys.ARROW_LEFT).perform()
-
-    def next_image(self):
-        ActionChains(self.driver).send_keys(Keys.SPACE).perform()
-
-    def like(self):
-        like_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/div[4]/button')
-        like_btn.click()
-
-    def dislike(self):
-        dislike_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/div[2]/button')
-        dislike_btn.click()
-
-    def match_popup(self):
-        m_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager-canvas"]/div/div/div[1]/div/div[3]/a')
-        m_btn.click()
-
-    def homescreen_popup(self):
-        hs_btn = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div[2]/button[2]/span')
-        hs_btn.click()
-
-    def plus_popup(self):
-        plus_popup = self.driver.find_element_by_xpath('//*[@id="modal-manager"]/div/div/div[3]/button[2]')
-        plus_popup.click()
-
-    def auto_swipe(self):
-        count, matches = 0, 0
-        stopper = int(input('How many swipes do we stop at? '))
-        message = int(input('Message people after? '))
-        while count != stopper:
-            sleep(1)
-            try:
-                self.like()
-                count += 1
-                print ('Like Counter: {} |  Match Counter: {}'.format(count, matches))
-                if message == 1:
-                    if count == stopper:
-                        self.auto_message()
-            except Exception:
-                sleep (0.5)
-                try:
-                    self.homescreen_popup()
-                except Exception:
-                    try:
-                        self.match_popup()
-                        matches += 1
-                        print ('---> Match Counter: {} <---'.format(matches))
-                    except Exception:
-                        pass                    
-
-    def send_messages(self):
-        match_btn = self.driver.find_element_by_xpath('//*[@id="matchListNoMessages"]/div[1]/div[2]/a/div[1]')
-        match_btn.click()
-
-        sleep(1)
-
-        # You can change the message to say whatever you want
-        message_in = self.driver.find_element_by_xpath('//*[@id="chat-text-area"]')
-        message_in.send_keys('I was told to expand my job search, so I did. Hi Im Aaron!')
-
-        sleep(1)
-
-        send_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/div[3]/form/button/span')
-        send_btn.click()
-
-    def match_tab(self):
-        mt_btn = self.driver.find_element_by_xpath('//*[@id="match-tab"]')
-        mt_btn.click()
-
-    def close_tab(self):
-        close_btn = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/div[1]/a/button')
-        close_btn.click()
-
-    # automatically messages people
-    def auto_message(self):
-        sent = 0
-        while True:
-            sleep(1)
-            try:
-                self.match_tab()
-                self.send_messages()
-                sent += 1
-                print ('Messages sent: {}'.format(sent))
-            except Exception:
-                pass
-
-
-bot = TinderBot()
-bot.login()
-sleep(5)
-# bot.auto_swipe()
-# bot.auto_message()
