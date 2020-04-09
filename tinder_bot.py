@@ -20,6 +20,7 @@ class TinderBot():
             string = "//button[contains(.,'More Options')]"
             moreops = self.driver.find_element_by_xpath(string)
             moreops.click()
+            sleep(0.25)
             fb_path = '//*[@id="modal-manager"]/div/div/div/div/div[3]/span/div[3]/button'
             fb_btn = self.driver.find_element_by_xpath(fb_path)
             fb_btn.click()
@@ -73,48 +74,15 @@ class TinderBot():
             sleep(0.25)
             all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
             print("images in loop: "+ str(len(all_image)))
+            print("---STARTLOOP---")
             for each in all_image:
+                print(each.get_attribute('style'))
                 url = each.get_attribute('style').split('"')[1]
                 print(url)
                 images.add(url)
         print(len(images))
-        profile_data['profile_pic_urls'] = images
-        
-
-
-
-        # images = set()
-        # for _ in range(10):
-        #     image = self.driver.find_element_by_class_name('profileCard__slider__img').get_attribute('style').split('"')[1]
-        #     print(image)
-        #     images.add(image)
-        #     self.next_image()
-        #     sleep(1)
-
-        # print(len(images))
-        # profile_data['profile_pic_urls'] = images
-        
-        # profile_pic_container_elem = self.driver.find_element_by_css_selector('#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.react-aspect-ratio-placeholder > span > a.profileCard__slider__backLink > div > div.Animdur\(\$fast\).Animtf\(eio\).profileCard__slider.Pos\(a\).W\(100\%\).Ta\(start\) > div')
-        # profile_pic_image_elements = profile_pic_container_elem.find_elements_by_class_name('profileCard__slider__img')
-        # images = []
-        # for each in profile_pic_image_elements:
-        #     image = each.get_attribute('style').split('"')[1]
-        #     print(image)
-        #     images.append(image)
-            
-        # print(len(images))
-        # profile_data['profile_pic_urls'] = images
-
-        # # Profile Pic URL
-        # try:
-        #     profile_pic_elem = self.driver.find_element_by_xpath('//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div/div[1]/span/a[2]/div/div[1]/div/div[1]/div/div/div')
-        #     profile_pic_contents = profile_pic_elem.get_attribute('style')
-        #     profile_pic_url = profile_pic_contents.split('"')[1]
-        # except:
-        #     print('Failed to get Profile Pic URL')
-        #     profile_pic_url = None
-
-        # profile_data['profile_pic_url'] = profile_pic_url
+        profile_data['profile_pic_urls'] = list(images)
+    
 
         # Profile Name
         try:
@@ -181,22 +149,29 @@ class TinderBot():
             print('Profile Info BROKEN')
 
 
-#         # Profile Details
-#         try:
-#             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.P\(16px\).Ta\(start\).Us\(t\).C\(\$c-secondary\).BreakWord.Whs\(pl\).Fz\(\$ms\) > div'
-#             profile_details_elem = self.driver.find_element_by_css_selector(css_path)
-#             profile_details = [x.text for x in profile_details_elem]
-#         except:
-#             print('Failed to get Details')
-#             profile_details = None
+        # Profile Details
+        try:
+            print("---TRYING FOR DETAILS---")
+            details_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.P\(16px\).Ta\(start\).Us\(t\).C\(\$c-secondary\).BreakWord.Whs\(pl\).Fz\(\$ms\)'
+            profile_details_elem = self.driver.find_element_by_css_selector(details_path)
+            print('Got details container')
+            contents = profile_details_elem.find_elements_by_tag_name('span')
+            print(len(contents))
+            details = ""
+            for each in contents:
+                print(each.text)
+                details += (each.text + " ")
+        except:
+            print('Failed to get Details')
+            details = None
 
-#         profile_data['details'] = profile_details
-# #
+        profile_data['details'] = details
+#
 
 
         print('DATA SO FAR')
         print(profile_data)
-        
+        self.like_key()
 
     def open_profile(self):
         ActionChains(self.driver).send_keys(Keys.ARROW_UP).perform()
