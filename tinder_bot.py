@@ -1,11 +1,11 @@
 from selenium import webdriver
 import sys
 sys.path.append('/Users/matthewhwang/Documents/Resources')
-from login import username, password
+from login import username, password, TBusername, TBpassword
 from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from src.profile_scraping import *
+import csv
 
 class TinderBot():
     def __init__(self):
@@ -13,7 +13,6 @@ class TinderBot():
 
     def login(self):
         self.driver.get('https://tinder.com')
-
         sleep(3)
         
         try:
@@ -42,7 +41,6 @@ class TinderBot():
         pw_in = self.driver.find_element_by_xpath('//*[@id="pass"]')
         pw_in.send_keys(password)
 
-
         login_btn = self.driver.find_element_by_xpath('//*[@id="u_0_0"]')
         login_btn.click()
 
@@ -63,24 +61,6 @@ class TinderBot():
         self.open_profile()
         
         profile_data = {}
-
-        # Profile Picture URLs
-        try:
-            images = set()
-            slideshow = self.driver.find_element_by_class_name('react-swipeable-view-container')
-            num_images = len(slideshow.find_elements_by_tag_name('div'))-3
-            for _ in range(num_images):
-                self.next_image()
-                sleep(0.25)
-                all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
-                for each in all_image:
-                    url = each.get_attribute('style').split('"')[1]
-                    images.add(url)
-        except:
-            images = None
-
-        profile_data['profile_pic_urls'] = list(images)
-    
 
         # Profile Name
         try:
@@ -111,6 +91,11 @@ class TinderBot():
         gender_icon = 'M15.507 13.032c1.14-.952 1.862-2.656 1.862-5.592C17.37 4.436 14.9 2 11.855 2 8.81 2 6.34 4.436 6.34 7.44c0 3.07.786 4.8 2.02 5.726-2.586 1.768-5.054 4.62-4.18 6.204 1.88 3.406 14.28 3.606 15.726 0 .686-1.71-1.828-4.608-4.4-6.338'
 
         try:
+            profile_data['college'] = None
+            profile_data['job'] = None
+            profile_data['city'] = None
+            profile_data['gender'] = None
+            profile_data['distance'] = None
             css_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.D\(f\).Jc\(sb\).Us\(n\).Px\(16px\).Py\(10px\) > div > div.Fz\(\$ms\)'
             info_table = self.driver.find_element_by_css_selector(css_path)
             info_rows = info_table.find_elements_by_class_name('Row')
@@ -135,7 +120,6 @@ class TinderBot():
         except:
             pass
 
-
         # Profile Details
         try:
             details_path = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div.P\(16px\).Ta\(start\).Us\(t\).C\(\$c-secondary\).BreakWord.Whs\(pl\).Fz\(\$ms\)'
@@ -148,7 +132,6 @@ class TinderBot():
             details = None
 
         profile_data['details'] = details
-#
 
         # SPOTIFY DATA
         anthem_artist_selector = '#content > div > div.App__body.H\(100\%\).Pos\(r\).Z\(0\) > div > main > div.H\(100\%\) > div > div > div.profileCard.Pos\(r\).D\(f\).Ai\(c\).Fld\(c\).Expand--s.Mt\(a\) > div.Pos\(r\)--ml.Z\(1\).Bgc\(\#fff\).Ov\(h\).Expand.profileContent.Bdrs\(8px\)--ml.Bxsh\(\$bxsh-card\)--ml > div > div.Bgc\(\#fff\).Fxg\(1\).Z\(1\).Pb\(100px\) > div:nth-child(5) > div > div > div > div.D\(f\).Fz\(\$s\).C\(\$c-secondary\) > span'
@@ -161,7 +144,43 @@ class TinderBot():
             anthem_song = anthem_song_elem.text
             profile_data['anthem'] = (anthem_song,anthem_artist)
         except:
-            pass
+            profile_data['anthem'] = None
+
+        # Profile Picture URLs
+        try:
+            images = set()
+            slideshow = self.driver.find_element_by_class_name('react-swipeable-view-container')
+            num_images = len(slideshow.find_elements_by_tag_name('div'))-3
+            for _ in range(num_images):
+                self.next_image()
+                sleep(0.25)
+                all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
+                for each in all_image:
+                    url = each.get_attribute('style').split('"')[1]
+                    images.add(url)
+        except:
+            images = None
+
+        profile_data['profile_pic_urls'] = list(images)
+    
+
+        csv_columns = ['name','age','college','job','city','gender','distance','details','anthem','profile_pic_urls']
+        csv_filename = 'data/profile_data.csv'
+        
+        # First Time Initialize
+        # with open(csv_filename,'w') as file:
+        #     writer = csv.DictWriter(file, fieldnames=csv_columns)
+        #     writer.writeheader()
+        #     writer.writerow(profile_data)
+        
+        # # Update data/profile_data.csv
+        with open(csv_filename,'a') as file:
+            writer = csv.DictWriter(file, fieldnames=csv_columns)
+            writer.writerow(profile_data)
+
+
+
+
 
         self.like_key()
 
