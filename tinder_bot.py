@@ -153,7 +153,7 @@ class TinderBot():
             num_images = len(slideshow.find_elements_by_tag_name('div'))-3
             for _ in range(num_images):
                 self.next_image()
-                sleep(0.25)
+                sleep(1)
                 all_image = self.driver.find_elements_by_class_name('profileCard__slider__img')
                 for each in all_image:
                     url = each.get_attribute('style').split('"')[1]
@@ -177,10 +177,6 @@ class TinderBot():
         with open(csv_filename,'a') as file:
             writer = csv.DictWriter(file, fieldnames=csv_columns)
             writer.writerow(profile_data)
-
-
-
-
 
         self.like_key()
 
@@ -223,7 +219,7 @@ class TinderBot():
         while count != stopper:
             sleep(1)
             try:
-                self.like()
+                self.profile_scrape()
                 count += 1
                 print ('Like Counter: {} |  Match Counter: {}'.format(count, matches))
                 if message == 1:
