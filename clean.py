@@ -7,7 +7,7 @@ from folium.plugins import HeatMap
 import numpy as np
 
 from geopy.geocoders import Nominatim
-geolocator = Nominatim()
+geolocator = Nominatim(user_agent="My_App")
 
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -22,6 +22,7 @@ def clean(data):
     Parse Strings
     Return dataframe
     '''
+    print("-----------------")
     print("CLEANING DATA")
     print("...")
     print("FOUND {} ENTRIES".format(len(data)))
@@ -42,6 +43,7 @@ def clean(data):
     return data
 
 def stats(data):
+    print("-----------------")
     print("CALCULATING STATS")
     print("...")
     total = len(data)
@@ -62,7 +64,7 @@ def stats(data):
     print("{} ENTRIES HAVE DETAIL DATA ({}%)".format(num_details,round(100*num_details/total,1)))
     num_anthem = total - data.anthem.isna().sum()
     print("{} ENTRIES HAVE ANTHEM DATA ({}%)".format(num_anthem,round(100*num_anthem/total,1)))
-    print("----")
+    print("...")
     avg_age = data.age.mean()
     print("AVERAGE AGE IN DATA SET: {}".format(int(avg_age)))
     unique_college = len(data.college.unique())
@@ -74,16 +76,15 @@ def stats(data):
         
 
 
-
 def fill_city(series,city_list,KNN_model):
-    if type(series.city)==float and     series.distance != float('nan'):
+    if type(series.city)==float and ~np.isnan(series.distance):
         try:
             city = np.random.choice(city_list[series.distance],1, replace=True)[0]
         except:
-            if series.distance == float('nan'):
-                city = float('nan')
-            else:
+            if ~np.isnan(series.distance):
                 city = KNN_model.predict(np.array([[series.distance]]))[0]
+            else:
+                city = float('nan')
     else:
         city = series.city
     return city
@@ -92,8 +93,10 @@ def fill_missing_cities(data):
     '''
     Use Numpy Random Choice to fill in missing cities based on others in same distance
     '''
+    print("-----------------")
+    print("FILLING MISSING CITY VALUES")
     num = data.city.isna().sum()
-    print("FOUND {} MISSING CITY VALUES".format(num))
+    print("FOUND {} MISSING VALUES".format(num))
     filtered = data[-data.city.isna()].copy()
     filtered = filtered[-filtered.distance.isna()]
     city_list = {}
@@ -102,9 +105,9 @@ def fill_missing_cities(data):
 
     #KNN for remaining values:
     X = np.array(list(filtered.distance)).reshape(-1,1)
-    y = np.array(list(filtered.city)).reshape(-1,1)
-    KNN_City = KNeighborsClassifier(n_neighbors=3).fit(X,y)
-
+    y = np.array(list(filtered.city))
+    KNN_City = KNeighborsClassifier(n_neighbors=10).fit(X,y)
+    
     data.city = data.apply(lambda x: fill_city(x,city_list,KNN_City), axis =1)
     new_num = data.city.isna().sum()
     print("{} MISSING CITY VALUES REMAIN".format(new_num))
@@ -118,26 +121,29 @@ def find_coordinates(city):
     try:
         return (location_dict[city]['lat'],location_dict[city]['lng'])
     except:
-        print("COORDINATES NOT FOUND FOR {}".format(city))
-        try:
-            location_data = geolocator.geocode(city)
-            coordinates = location_data[0]['geometry']
-            location_dict[city] = coordinates
-            with open('loc_data.json','w') as file:
-                json.dump(location_dict,file)
-                file.close()
-            print("OBTAINED NEW COORDINATES")
-            return (coordinates['lat'],coordinates['lng'])
-        except:
-            print("COULD NOT OBTAIN NEW COORDINATES")
-            return float("nan")
-    pass
-
-def add_in_values(data):
+        # print("COORDINATES NOT FOUND FOR {}".format(city))
+        # try:
+        #     location_data = geolocator.geocode(city)
+        #     coordinates = location_data[0]['geometry']
+        #     location_dict[city] = coordinates
+        #     with open('loc_data.json','w') as file:
+        #         json.dump(location_dict,file)
+        #         file.close()
+        #     print("OBTAINED NEW COORDINATES")
+        #     return (coordinates['lat'],coordinates['lng'])
+        # except:
+        #     print("COULD NOT OBTAIN NEW COORDINATES")
+        #     return float("nan")
+        return np.nan
+def add_location_values(data):
     '''
     Add in lat and longitude values
     '''
-    data = data['location'] = data.city.apply(lambda x: find_coordinates(x))
+    print("-----------------")
+    print("ADDING LOCATION COORDINATE VALUES")
+    data['location'] = data.city.apply(lambda x: find_coordinates(x))
+    num = data.location.isna().sum()
+    print("COULD NOT FIND LOCATION DATA FOR {} ENTRIES".format(num))
     return data
 
 def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
@@ -160,8 +166,10 @@ def plot_user_heatmap(data):
     return base_map
     
 
-# df = pd.read_csv('data/profile_data.csv')
-# print(df.head())
-# print("------------------------")
-# cleaned = clean(df)
-# print(cleaned.head())
+df = pd.read_csv('data/profile_data.csv')
+df = clean(df)
+stats(df)
+df = fill_missing_cities(df)
+df = add_location_values(df)
+map = plot_user_heatmap(df)
+map.save('heatmap.html')
