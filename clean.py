@@ -9,6 +9,8 @@ import numpy as np
 from geopy.geocoders import Nominatim
 geolocator = Nominatim()
 
+from sklearn.neighbors import KNeighborsClassifier
+
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
 
@@ -34,7 +36,7 @@ def clean(data):
     data.name = data.name.apply(lambda x: x.capitalize())
     data.age = data.age.apply(lambda x: int(x) if not math.isnan(x) else x)
     data.city = data.city.apply(lambda x: x[9:] if type(x) != float else x)
-    data.distance = data.distance.apply(lambda x: x.split(' ')[0] if type(x) != float else x)
+    data.distance = data.distance.apply(lambda x: int(x.split(' ')[0]) if type(x) != float else x)
 
     
     return data
@@ -71,17 +73,43 @@ def stats(data):
     print("NUMBER OF UNIQUE CITIES: {}".format(unique_cities))
         
 
+
+
+def fill_city(series,city_list,KNN_model):
+    if type(series.city)==float and     series.distance != float('nan'):
+        try:
+            city = np.random.choice(city_list[series.distance],1, replace=True)[0]
+        except:
+            if series.distance == float('nan'):
+                city = float('nan')
+            else:
+                city = KNN_model.predict(np.array([[series.distance]]))[0]
+    else:
+        city = series.city
+    return city
+
 def fill_missing_cities(data):
     '''
-    Use KNN of similar distances to fill in blank city values
+    Use Numpy Random Choice to fill in missing cities based on others in same distance
     '''
-    pass
+    num = data.city.isna().sum()
+    print("FOUND {} MISSING CITY VALUES".format(num))
+    filtered = data[-data.city.isna()].copy()
+    filtered = filtered[-filtered.distance.isna()]
+    city_list = {}
+    for each in filtered.distance.unique():
+        city_list[each] = list(filtered[filtered.distance == each].city)
 
-def add_in_values(data):
-    '''
-    Add in lat and longitude values
-    '''
-    pass
+    #KNN for remaining values:
+    X = np.array(list(filtered.distance)).reshape(-1,1)
+    y = np.array(list(filtered.city)).reshape(-1,1)
+    KNN_City = KNeighborsClassifier(n_neighbors=3).fit(X,y)
+
+    data.city = data.apply(lambda x: fill_city(x,city_list,KNN_City), axis =1)
+    new_num = data.city.isna().sum()
+    print("{} MISSING CITY VALUES REMAIN".format(new_num))
+    
+    return data
 
 def find_coordinates(city):
     '''
@@ -98,11 +126,19 @@ def find_coordinates(city):
             with open('loc_data.json','w') as file:
                 json.dump(location_dict,file)
                 file.close()
+            print("OBTAINED NEW COORDINATES")
             return (coordinates['lat'],coordinates['lng'])
         except:
+            print("COULD NOT OBTAIN NEW COORDINATES")
             return float("nan")
     pass
 
+def add_in_values(data):
+    '''
+    Add in lat and longitude values
+    '''
+    data = data['location'] = data.city.apply(lambda x: find_coordinates(x))
+    return data
 
 def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
     # Generates Base Folium Map
@@ -120,7 +156,6 @@ def plot_user_heatmap(data):
     new['lat'] = new.location.apply(lambda x: x[0])
     new['lon'] = new.location.apply(lambda x: x[1])
     new['count'] = 1
-    print(new.head())
     HeatMap(data=new[['lat', 'lon', 'count']].groupby(['lat', 'lon']).sum().reset_index().values.tolist(), radius=8, max_zoom=13).add_to(base_map)
     return base_map
     
