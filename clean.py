@@ -110,7 +110,7 @@ def fill_missing_cities(data):
     
     data.city = data.apply(lambda x: fill_city(x,city_list,KNN_City), axis =1)
     new_num = data.city.isna().sum()
-    print("{} MISSING CITY VALUES REMAIN".format(new_num))
+    print("{} MISSING CITY VALUES REMAIN ({}%)".format(new_num,round(new_num/len(data),2)))
     
     return data
 
@@ -143,13 +143,13 @@ def add_location_values(data):
     print("ADDING LOCATION COORDINATE VALUES")
     data['location'] = data.city.apply(lambda x: find_coordinates(x))
     num = data.location.isna().sum()
-    print("COULD NOT FIND LOCATION DATA FOR {} ENTRIES".format(num))
+    print("COULD NOT FIND LOCATION DATA FOR {} ENTRIES ({}%)".format(num,round(num/len(data),2)))
     return data
 
 def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
     # Generates Base Folium Map
 
-    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start)
+    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start,tiles='Stamen Toner')
     return base_map
 
 def plot_user_heatmap(data):
@@ -165,11 +165,3 @@ def plot_user_heatmap(data):
     HeatMap(data=new[['lat', 'lon', 'count']].groupby(['lat', 'lon']).sum().reset_index().values.tolist(), radius=8, max_zoom=13).add_to(base_map)
     return base_map
     
-
-df = pd.read_csv('data/profile_data.csv')
-df = clean(df)
-stats(df)
-df = fill_missing_cities(df)
-df = add_location_values(df)
-map = plot_user_heatmap(df)
-map.save('heatmap.html')
