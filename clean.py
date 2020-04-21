@@ -6,6 +6,9 @@ import folium
 from folium.plugins import HeatMap
 import numpy as np
 
+from geopy.geocoders import Nominatim
+geolocator = Nominatim()
+
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
 
@@ -88,7 +91,16 @@ def find_coordinates(city):
         return (location_dict[city]['lat'],location_dict[city]['lng'])
     except:
         print("COORDINATES NOT FOUND FOR {}".format(city))
-        return float("nan")
+        try:
+            location_data = geolocator.geocode(city)
+            coordinates = location_data[0]['geometry']
+            location_dict[city] = coordinates
+            with open('loc_data.json','w') as file:
+                json.dump(location_dict,file)
+                file.close()
+            return (coordinates['lat'],coordinates['lng'])
+        except:
+            return float("nan")
     pass
 
 
