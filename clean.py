@@ -11,6 +11,8 @@ geolocator = Nominatim(user_agent="My_App")
 
 from sklearn.neighbors import KNeighborsClassifier
 
+from opencage.geocoder import OpenCageGeocode
+
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
 
@@ -149,7 +151,7 @@ def add_location_values(data):
 def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
     # Generates Base Folium Map
 
-    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start,tiles='Stamen Toner')
+    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start)
     return base_map
 
 def plot_user_heatmap(data):
@@ -165,3 +167,29 @@ def plot_user_heatmap(data):
     HeatMap(data=new[['lat', 'lon', 'count']].groupby(['lat', 'lon']).sum().reset_index().values.tolist(), radius=8, max_zoom=13).add_to(base_map)
     return base_map
     
+def update_location_dictionary(data):
+    '''
+    Identify cities that are not in the location data dictionary
+    Use OpenCageGeocode to find location info
+    Append location data dictionary
+    '''
+    new = data[-data.city.isna()]
+    cities = new.city.unique().tolist()
+    still_need = []
+    locations = list(location_dict)
+    for each in cities:
+        if each not in locations:
+            still_need.append(each)
+    key = "94b38715f5b64f4db83c6313faf5893e"
+    geocoder = OpenCageGeocode(key)
+    location_cache = {}
+    for each in still_need:
+        try:
+            location_cache[each] = geocoder.geocode(each)[0]['geometry']
+        except:
+            pass
+    with open("loc_data.json", "r+") as file:
+        info = json.load(file)
+        info.update(location_cache)
+        file.seek(0)
+        json.dump(info, file)
