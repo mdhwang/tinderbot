@@ -1,5 +1,13 @@
 import pandas as pd
 import math as math
+import json
+
+import folium
+from folium.plugins import HeatMap
+import numpy as np
+
+with open('loc_data.json','r') as file:
+    location_dict = json.load(file)
 
 def clean(data):
     '''
@@ -59,6 +67,51 @@ def stats(data):
     unique_cities = len(data.city.unique())
     print("NUMBER OF UNIQUE CITIES: {}".format(unique_cities))
         
+
+def fill_missing_cities(data):
+    '''
+    Use KNN of similar distances to fill in blank city values
+    '''
+    pass
+
+def add_in_values(data):
+    '''
+    Add in lat and longitude values
+    '''
+    pass
+
+def find_coordinates(city):
+    '''
+    Find latitude/longitude values from dict, if not look up, fill value and update master dictionary.
+    '''
+    try:
+        return (location_dict[city]['lat'],location_dict[city]['lng'])
+    except:
+        print("COORDINATES NOT FOUND FOR {}".format(city))
+        return float("nan")
+    pass
+
+
+def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
+    # Generates Base Folium Map
+
+    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start)
+    return base_map
+
+def plot_user_heatmap(data):
+    '''
+    Use folium to generate heatmap based on user locations.
+    '''
+    base_map = generateBaseMap()
+    new = data[-data.city.isna()]
+    new = new[-new.location.isna()]
+    new['lat'] = new.location.apply(lambda x: x[0])
+    new['lon'] = new.location.apply(lambda x: x[1])
+    new['count'] = 1
+    print(new.head())
+    HeatMap(data=new[['lat', 'lon', 'count']].groupby(['lat', 'lon']).sum().reset_index().values.tolist(), radius=8, max_zoom=13).add_to(base_map)
+    return base_map
+    
 
 # df = pd.read_csv('data/profile_data.csv')
 # print(df.head())
