@@ -13,6 +13,9 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from opencage.geocoder import OpenCageGeocode
 
+from emoji import UNICODE_EMOJI
+
+
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
 
@@ -193,3 +196,17 @@ def update_location_dictionary(data):
         info.update(location_cache)
         file.seek(0)
         json.dump(info, file)
+
+
+
+bad_chars = ["\n","\r"]
+
+def clean_details(details):
+    for char in bad_chars:
+        details = details.replace(char,"")
+    return details
+
+def details_stats(details):
+    data = {}
+    details.split(' ')
+    pass
