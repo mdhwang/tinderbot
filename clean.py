@@ -15,6 +15,7 @@ from opencage.geocoder import OpenCageGeocode
 
 from emoji import UNICODE_EMOJI
 
+from nmf_helpers import *
 
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
@@ -210,3 +211,30 @@ def details_stats(details):
     data = {}
     details.split(' ')
     pass
+
+
+def calc_similarity(data,category,value):
+    '''
+    Take details per user in specified dataset with category equal to value
+    Vectorize each
+    Compare each to each and calculate mean
+    Get distribution of means of all users
+    Calculate and label users based on standard deviations away from mean
+    Export report based on results (to be interactive in future)
+    '''
+
+    print("Calculating user similarity on dataset where {} equals {}".format(category,value))
+    specified = data[data[category]==value]
+    specified = specified[-specified.category.isna()]
+    print("Found {} Users".format(len(specified)))
+    contents = specified.details
+    
+    # Vectorize details per user
+    vectorizer, vocabulary = build_text_vectorizer(contents,
+                             use_tfidf=True,
+                             use_stemmer=True,
+                             max_features=5000)
+    X = vectorizer(contents)
+    means = []
+    for each in X:
+        #compare each to each
