@@ -17,7 +17,9 @@ from emoji import UNICODE_EMOJI
 
 from nmf_helpers import *
 
-from scipy import spatial   
+from sklearn.metrics.pairwise import cosine_similarity
+
+import plotly.figure_factory as ff
 
 with open('loc_data.json','r') as file:
     location_dict = json.load(file)
@@ -215,28 +217,80 @@ def details_stats(details):
     pass
 
 
-# def calc_similarity(data,category,value):
-#     '''
-#     Take details per user in specified dataset with category equal to value
-#     Vectorize each
-#     Compare each to each and calculate mean
-#     Get distribution of means of all users
-#     Calculate and label users based on standard deviations away from mean
-#     Export report based on results (to be interactive in future)
-#     '''
+def calc_similarity(data,category,value):
+    '''
+    Take details per user in specified dataset with category equal to value
+    Vectorize each
+    Compare each to each and calculate mean
+    Get distribution of means of all users
+    Calculate and label users based on standard deviations away from mean
+    Return updated dataframe
+    '''
 
-#     print("Calculating user similarity on dataset where {} equals {}".format(category,value))
-#     specified = data[data[category]==value]
-#     specified = specified[-specified.category.isna()]
-#     print("Found {} Users".format(len(specified)))
-#     contents = specified.details
+    print("Calculating user similarity on dataset where {} equals {}".format(category,value))
+    specified = data[data[category]==value]
+    specified = specified[-specified.category.isna()]
+    print("Found {} Users".format(len(specified)))
+    contents = specified.details
     
-#     # Vectorize details per user
-#     vectorizer, vocabulary = build_text_vectorizer(contents,
-#                              use_tfidf=True,
-#                              use_stemmer=True,
-#                              max_features=5000)
-#     X = vectorizer(contents)
-#     means = []
-#     for each in X:
-#         #compare each to each
+    # Vectorize details per user
+    vectorizer, vocabulary = build_text_vectorizer(contents,
+                             use_tfidf=True,
+                             use_stemmer=True,
+                             max_features=5000)
+    X = vectorizer(contents)
+    
+    # COMPARE TO THE AVERAGE VECTOR O(n)
+    avg = np.mean(X,axis=0)
+    cosine_diff = []
+    for user in X:
+        cosine_diff.append(cosine_similarity(user.reshape(1,-1),avg.reshape(1,-1))[0][0])
+    
+    # COMPARE EACH TO EACH O(n)^2
+    # cosine_diff = []
+    # for user in X:
+    #     average = []
+    #     for other in X:
+    #         average.append(cosine_similarity(user.reshape(1, -1),other.reshape(1, -1))[0][0])
+    #     cosine_diff.append(np.mean(average))
+
+    data['cosine'] = cosine_diff
+
+    def std_classifier(cosine_vals):
+        mean = cosine_vals.mean()
+        std = cosine_vals.std()
+        std_class = []
+        for each in cosine_vals:
+            diff = abs(each-mean)
+            distance = math.ceil(diff / std)
+            std_class.append(distance)
+        return std_class
+
+    data['std_class'] = std_classifier(data.cosine)
+
+    return data
+
+def plot_cosine_dist(category,cosine_data):
+    fig = ff.create_distplot(np.array([cosine_data.to_list()]), ['cosine'],bin_size=.005)
+    mean = cosine_data.mean()
+    std = cosine_data.std()
+    lines = [mean,mean+std,mean-std,mean+2*std,mean-2*std]
+    for each in lines:
+        fig.add_shape(
+                # Line Vertical
+                dict(
+                    type="line",
+                    x0=each,
+                    y0=0,
+                    x1=each,
+                    y1=50,
+                    line=dict(
+                        color="Red",
+                        width=3
+                    )
+        ))
+    fig.update_layout(title={'text':'Mean Similarity Distribution for {}'.format(category),
+                        'xanchor': 'left'},
+                        xaxis_title="Cosine Similarity to Average User",
+                        yaxis_title="Frequency",)
+    fig.show()
