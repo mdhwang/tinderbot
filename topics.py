@@ -1,0 +1,10 @@
+topics = {}
+topics['instagram'] = ['ig','insta','instagram','📷','📸','@']
+topics['snapchat'] = ['sc','snap','snapchat','👻']
+topics['premium snap'] = ['venmo','cashapp','💰']
+topics['covid19'] = ['corona','coronavirus','cv','quarantine','covid','covid19','virus','sick','covid-19','wfh','work from home','social distancing','shelter','apocalypse','2020']
+topics['cannabis'] = ['weed','420','maryjane','smoke','blaze','marijuana','blunt','bong','joint','high','drug','drugs','cannabis']
+topics['dirty'] = ['pussy','dick','penis','vagina','daddy','🍆','👅','💦','fuck','sex']
+topics['tv'] = ['netflix','tv','show','hulu','movies','movie','watch','series']
+topics['office'] = ['office','jim','pam','dwight','schrute','michael','dunder','mifflin']
+topics['himym'] = ['himym']

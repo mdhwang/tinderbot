@@ -1,13 +1,7 @@
 import pandas as pd
 import math as math
 import json
-
-import folium
-from folium.plugins import HeatMap
 import numpy as np
-
-from geopy.geocoders import Nominatim
-geolocator = Nominatim(user_agent="My_App")
 
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -19,7 +13,15 @@ from nmf_helpers import *
 
 from sklearn.metrics.pairwise import cosine_similarity
 
-import plotly.figure_factory as ff
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize 
+stop_words = set(stopwords.words('english')) 
+bad_chars = ["\n","\r"]
+for each in bad_chars:
+    stop_words.add(each)
+
+from topics import topics
+
 
 with open('data/loc_data.json','r') as file:
     location_dict = json.load(file)
@@ -48,9 +50,16 @@ def clean(data):
     data.age = data.age.apply(lambda x: int(x) if not math.isnan(x) else x)
     data.city = data.city.apply(lambda x: x[9:] if type(x) != float else x)
     data.distance = data.distance.apply(lambda x: int(x.split(' ')[0]) if type(x) != float else x)
-
+    data['num_pics'] = data.profile_pics_urls.apply(lambda x: len(x))
+    data['filtered_details'] = data[-data.details.isna()].apply(lambda x: filter_details(x))
+    
     
     return data
+
+def filter_details(text):
+    word_tokens = word_tokenize(text.lower())
+    filtered = [w for w in word_tokens if not w in stop_words] 
+    return set(filtered)
 
 def stats(data):
     print("-----------------")
@@ -83,7 +92,28 @@ def stats(data):
     print("NUMBER OF UNIQUE JOBS: {}".format(unique_jobs))
     unique_cities = len(data.city.unique())
     print("NUMBER OF UNIQUE CITIES: {}".format(unique_cities))
+    avg_pics = data.pics.mean()
+    print("AVERAGE PICS PER PROFILE: {}".format(int(avg_pics)))
+
         
+
+def find_country(city):
+    try:
+        if type(city) != float:
+            return location_dict[city]['country']
+        else:
+            return np.nan
+    except:
+        return np.nan
+
+def find_state(city):
+    try:
+        if type(city) != float:
+            return location_dict[city]['state']
+        else:
+            return np.nan
+    except:
+        return np.nan
 
 
 def fill_city(series,city_list,KNN_model):
@@ -94,7 +124,7 @@ def fill_city(series,city_list,KNN_model):
             if ~np.isnan(series.distance):
                 city = KNN_model.predict(np.array([[series.distance]]))[0]
             else:
-                city = float('nan')
+                city = np.nan
     else:
         city = series.city
     return city
@@ -102,6 +132,7 @@ def fill_city(series,city_list,KNN_model):
 def fill_missing_cities(data):
     '''
     Use Numpy Random Choice to fill in missing cities based on others in same distance
+    Use KNN for distances that are not explicitly specified
     '''
     print("-----------------")
     print("FILLING MISSING CITY VALUES")
@@ -131,20 +162,8 @@ def find_coordinates(city):
     try:
         return (location_dict[city]['lat'],location_dict[city]['lng'])
     except:
-        # print("COORDINATES NOT FOUND FOR {}".format(city))
-        # try:
-        #     location_data = geolocator.geocode(city)
-        #     coordinates = location_data[0]['geometry']
-        #     location_dict[city] = coordinates
-        #     with open('loc_data.json','w') as file:
-        #         json.dump(location_dict,file)
-        #         file.close()
-        #     print("OBTAINED NEW COORDINATES")
-        #     return (coordinates['lat'],coordinates['lng'])
-        # except:
-        #     print("COULD NOT OBTAIN NEW COORDINATES")
-        #     return float("nan")
         return np.nan
+
 def add_location_values(data):
     '''
     Add in lat and longitude values
@@ -152,68 +171,19 @@ def add_location_values(data):
     print("-----------------")
     print("ADDING LOCATION COORDINATE VALUES")
     data['location'] = data.city.apply(lambda x: find_coordinates(x))
+    data['country'] = data.city.apply(lambda x: find_country(x))
+    data['state'] = data[data.country=="United States of America"].city.apply(lambda x: find_state(x))
     num = data.location.isna().sum()
     print("COULD NOT FIND LOCATION DATA FOR {} ENTRIES ({}%)".format(num,round(num/len(data),2)))
     return data
+   
+def topic_check(filtered_details,topic):
+    for word in topics[topic]:
+        if word in filtered_details:
+            return True
+    return False
 
-def generateBaseMap(default_location=[37.793331, -122.392776], default_zoom_start=12):
-    # Generates Base Folium Map
-
-    base_map = folium.Map(location=default_location, control_scale=True, zoom_start=default_zoom_start)
-    return base_map
-
-def plot_user_heatmap(data):
-    '''
-    Use folium to generate heatmap based on user locations.
-    '''
-    base_map = generateBaseMap()
-    new = data[-data.city.isna()]
-    new = new[-new.location.isna()]
-    new['lat'] = new.location.apply(lambda x: x[0])
-    new['lon'] = new.location.apply(lambda x: x[1])
-    new['count'] = 1
-    HeatMap(data=new[['lat', 'lon', 'count']].groupby(['lat', 'lon']).sum().reset_index().values.tolist(), radius=8, max_zoom=13).add_to(base_map)
-    return base_map
-    
-def update_location_dictionary(data):
-    '''
-    Identify cities that are not in the location data dictionary
-    Use OpenCageGeocode to find location info
-    Append location data dictionary
-    '''
-    new = data[-data.city.isna()]
-    cities = new.city.unique().tolist()
-    still_need = []
-    locations = list(location_dict)
-    for each in cities:
-        if each not in locations:
-            still_need.append(each)
-    key = "94b38715f5b64f4db83c6313faf5893e"
-    geocoder = OpenCageGeocode(key)
-    location_cache = {}
-    for each in still_need:
-        try:
-            location_cache[each] = geocoder.geocode(each)[0]['geometry']
-        except:
-            pass
-    with open("data/loc_data.json", "r+") as file:
-        info = json.load(file)
-        info.update(location_cache)
-        file.seek(0)
-        json.dump(info, file)
-
-
-
-bad_chars = ["\n","\r"]
-
-def clean_details(details):
-    for char in bad_chars:
-        details = details.replace(char,"")
-    return details
-
-def details_stats(details):
-    data = {}
-    details.split(' ')
+def add_topics(data):
     pass
 
 
@@ -270,27 +240,3 @@ def calc_similarity(data,category,value):
 
     return data
 
-def plot_cosine_dist(category,cosine_data):
-    fig = ff.create_distplot(np.array([cosine_data.to_list()]), ['cosine'],bin_size=.005)
-    mean = cosine_data.mean()
-    std = cosine_data.std()
-    lines = [mean,mean+std,mean-std,mean+2*std,mean-2*std]
-    for each in lines:
-        fig.add_shape(
-                # Line Vertical
-                dict(
-                    type="line",
-                    x0=each,
-                    y0=0,
-                    x1=each,
-                    y1=50,
-                    line=dict(
-                        color="Red",
-                        width=3
-                    )
-        ))
-    fig.update_layout(title={'text':'Mean Similarity Distribution for {}'.format(category),
-                        'xanchor': 'left'},
-                        xaxis_title="Cosine Similarity to Average User",
-                        yaxis_title="Frequency",)
-    fig.show()

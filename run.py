@@ -43,6 +43,11 @@ query = input("RUN DATA CLEANING SCRIPT? Y/N : ")
 if query.lower() == 'y':
     df = pd.read_csv('data/raw/profile_data.csv')
     df = clean(df)
+    df = fill_missing_cities(df)
+    df = add_location_values(df)
+    
+
+    
     df.to_csv('data/processed/cleaned_data.csv',index=False)
     print("-----------------")
     print("RAW DATA CLEANED AND SAVED IN PROCESSED FOLDER")
