@@ -21,7 +21,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import plotly.figure_factory as ff
 
-with open('loc_data.json','r') as file:
+with open('data/loc_data.json','r') as file:
     location_dict = json.load(file)
 
 def clean(data):
@@ -196,7 +196,7 @@ def update_location_dictionary(data):
             location_cache[each] = geocoder.geocode(each)[0]['geometry']
         except:
             pass
-    with open("loc_data.json", "r+") as file:
+    with open("data/loc_data.json", "r+") as file:
         info = json.load(file)
         info.update(location_cache)
         file.seek(0)

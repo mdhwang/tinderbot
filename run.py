@@ -11,12 +11,12 @@ geolocator = Nominatim(user_agent="My_App")
 
 from sklearn.neighbors import KNeighborsClassifier
 
-with open('loc_data.json','r') as file:
+with open('data/loc_data.json','r') as file:
     location_dict = json.load(file)
 
 from clean import *
 
-df = pd.read_csv('data/profile_data.csv')
+df = pd.read_csv('data/raw/profile_data.csv')
 df = clean(df)
 stats(df)
 df = fill_missing_cities(df)
