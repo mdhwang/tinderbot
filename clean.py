@@ -16,11 +16,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
 stop_words = set(stopwords.words('english')) 
-bad_chars = ["\n","\r"]
+bad_chars = ["\n","\r",'\'','"',',','.','(',')','&','!','?',':','-','`','...','..','/']
 for each in bad_chars:
     stop_words.add(each)
 
-from topics import topics
+from topics import *
 
 
 with open('data/loc_data.json','r') as file:
@@ -50,16 +50,18 @@ def clean(data):
     data.age = data.age.apply(lambda x: int(x) if not math.isnan(x) else x)
     data.city = data.city.apply(lambda x: x[9:] if type(x) != float else x)
     data.distance = data.distance.apply(lambda x: int(x.split(' ')[0]) if type(x) != float else x)
-    data['num_pics'] = data.profile_pics_urls.apply(lambda x: len(x))
-    data['filtered_details'] = data[-data.details.isna()].apply(lambda x: filter_details(x))
+    data.profile_pic_urls = data.profile_pic_urls.apply(lambda x: x.strip("[]").split(", "))
+    data['num_pics'] = data.profile_pic_urls.apply(lambda x: len(x))
+    data['filtered_details'] = data[-data.details.isna()].details.apply(lambda x: filter_details(x))
     
     
     return data
 
 def filter_details(text):
     word_tokens = word_tokenize(text.lower())
-    filtered = [w for w in word_tokens if not w in stop_words] 
-    return set(filtered)
+    word_tokens = set(word_tokens)
+    filtered = word_tokens - stop_words
+    return filtered
 
 def stats(data):
     print("-----------------")
@@ -92,7 +94,7 @@ def stats(data):
     print("NUMBER OF UNIQUE JOBS: {}".format(unique_jobs))
     unique_cities = len(data.city.unique())
     print("NUMBER OF UNIQUE CITIES: {}".format(unique_cities))
-    avg_pics = data.pics.mean()
+    avg_pics = data.num_pics.mean()
     print("AVERAGE PICS PER PROFILE: {}".format(int(avg_pics)))
 
         
@@ -178,13 +180,26 @@ def add_location_values(data):
     return data
    
 def topic_check(filtered_details,topic):
-    for word in topics[topic]:
-        if word in filtered_details:
-            return True
+    if filtered_details.intersection(topics[topic]) != set():
+        return True
+    return False
+
+def second_check(filtered_details,existing,topic):
+    if existing == True:
+        return True
+    for word in list(filtered_details):
+        for each in second_pass[topic]:
+            if each in word:
+                return True
     return False
 
 def add_topics(data):
-    pass
+    for each in topics:
+        data[each] = data[-data.filtered_details.isna()].filtered_details.apply(lambda x: topic_check(x,each))
+    
+    for each in second_pass:
+        data[each] = data[-data.filtered_details.isna()].apply(lambda x: second_check(x.filtered_details,x[each],each),axis=1)
+    return data
 
 
 def calc_similarity(data,category,value):
