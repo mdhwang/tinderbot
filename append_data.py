@@ -67,22 +67,3 @@ def update_location_dictionary(data):
         info.update(location_cache)
         file.seek(0)
         json.dump(info, file)
-
-
-
-print("-----------------")
-print("THIS SCRIPT WILL APPEND NEW DATA TO MASTER RAW FILE")
-print("MAKE SURE TO PUT NEW DATA INTO APPEND FOLDER")
-runit = input("Run Script? Y/N ? : ")
-if runit.lower() == 'y':
-    append_data()
-else:
-    print("SCRIPT CANCELLED - NO DATA ADDED")
-    print("SCRIPT COMPLETED")
-    print("-----------------")
-
-print("UPDATE DICTIONARY?")
-runit = input("Run Script? Y/N ? : ")
-if runit.lower() == 'y':
-    df = pd.read_csv("data/raw/profile_data.csv")
-    update_location_dictionary(df)
