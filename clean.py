@@ -1,17 +1,11 @@
 import pandas as pd
-import math as math
-import json
 import numpy as np
 
 from sklearn.neighbors import KNeighborsClassifier
 
-from opencage.geocoder import OpenCageGeocode
-
 from emoji import UNICODE_EMOJI
 
 from nmf_helpers import *
-
-from sklearn.metrics.pairwise import cosine_similarity
 
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
@@ -201,57 +195,4 @@ def add_topics(data):
         data[each] = data[-data.filtered_details.isna()].apply(lambda x: second_check(x.filtered_details,x[each],each),axis=1)
     return data
 
-
-def calc_similarity(data,category,value):
-    '''
-    Take details per user in specified dataset with category equal to value
-    Vectorize each
-    Compare each to each and calculate mean
-    Get distribution of means of all users
-    Calculate and label users based on standard deviations away from mean
-    Return updated dataframe
-    '''
-
-    print("Calculating user similarity on dataset where {} equals {}".format(category,value))
-    specified = data[data[category]==value]
-    specified = specified[-specified.category.isna()]
-    print("Found {} Users".format(len(specified)))
-    contents = specified.details
-    
-    # Vectorize details per user
-    vectorizer, vocabulary = build_text_vectorizer(contents,
-                             use_tfidf=True,
-                             use_stemmer=True,
-                             max_features=5000)
-    X = vectorizer(contents)
-    
-    # COMPARE TO THE AVERAGE VECTOR O(n)
-    avg = np.mean(X,axis=0)
-    cosine_diff = []
-    for user in X:
-        cosine_diff.append(cosine_similarity(user.reshape(1,-1),avg.reshape(1,-1))[0][0])
-    
-    # COMPARE EACH TO EACH O(n)^2
-    # cosine_diff = []
-    # for user in X:
-    #     average = []
-    #     for other in X:
-    #         average.append(cosine_similarity(user.reshape(1, -1),other.reshape(1, -1))[0][0])
-    #     cosine_diff.append(np.mean(average))
-
-    data['cosine'] = cosine_diff
-
-    def std_classifier(cosine_vals):
-        mean = cosine_vals.mean()
-        std = cosine_vals.std()
-        std_class = []
-        for each in cosine_vals:
-            diff = abs(each-mean)
-            distance = math.ceil(diff / std)
-            std_class.append(distance)
-        return std_class
-
-    data['std_class'] = std_classifier(data.cosine)
-
-    return data
 
