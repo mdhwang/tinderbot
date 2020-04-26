@@ -45,7 +45,7 @@ if query.lower() == 'y':
     df = clean(df)
     df = fill_missing_cities(df)
     df = add_location_values(df)
-    
+    df = add_topics(df)
 
     
     df.to_csv('data/processed/cleaned_data.csv',index=False)
