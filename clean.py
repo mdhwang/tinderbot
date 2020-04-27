@@ -37,10 +37,11 @@ def clean(data):
     duplicated_entries = data.duplicated()
     data = data[-duplicated_entries]
     print("REMOVED {} DUPLICATED ENTRIES".format(duplicated_entries.sum()))
+    print("{} ENTRIES REMAIN".format(len(data)))
     
     # Data conversions to be added into webscraping script
     data.name = data.name.apply(lambda x: x.capitalize())
-    data.age = data.age.apply(lambda x: int(x) if not math.isnan(x) else x)
+    data.age = data.age.apply(lambda x: int(x) if not np.isnan(x) else x)
     data.city = data.city.apply(lambda x: x[9:] if type(x) != float else x)
     data.distance = data.distance.apply(lambda x: int(x.split(' ')[0]) if type(x) != float else x)
     data.profile_pic_urls = data.profile_pic_urls.apply(lambda x: x.strip("[]").split(", "))
