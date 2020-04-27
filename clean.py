@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
+import json
 
 from sklearn.neighbors import KNeighborsClassifier
 
 from emoji import UNICODE_EMOJI
-
-from nmf_helpers import *
 
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 

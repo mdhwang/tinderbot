@@ -1,10 +1,6 @@
 import pandas as pd
 
 from topics import *
-import matplotlib.pyplot as plt
-import seaborn as sb
-
-from sklearn.metrics.pairwise import cosine_similarity
 
 from clean import stats
 
@@ -32,6 +28,8 @@ def calc_city_stats(df):
 def top_5(citydf):
     print("---------------------------------------------")
     print("-----------HERE ARE YOUR TOP 5---------------")
+    print("-----TOP 5 CITIES WITH MOST DATA ENTRIES-----")
+    print(citydf.DPs.sort_values(ascending=False).head())
     print("-----TOP 5 CITIES WITH HIGHEST COLLEGE %-----")
     print(citydf.college.sort_values(ascending=False).head())
     print("---------------------------------------------")
@@ -47,71 +45,10 @@ def top_5(citydf):
     print(citydf.covid19.sort_values(ascending=False).head())
     print("-------TOP 5 CITIES WITH HIGHEST WEED %-----")
     print(citydf.cannabis.sort_values(ascending=False).head())
-    
-def single_city_query(df):
-    query = input("WHAT CITY? : ")
-    if query not in df.city.to_list():
-        print("CITY NOT FOUND")
-    df = df[df.city == query]
-    stats(df)
-    sb.distplot(df[-df.age.isna()].age)
-    plt.show()
-    
+    print("---------------------------------------------")
+    print(citydf.head())
+
 df = pd.read_csv("data/processed/cleaned_data.csv")
-# new = calc_city_stats(df)
-# top_5(new)
-single_city_query(df)
+new = calc_city_stats(df)
+top_5(new)
 
-
-def calc_similarity(data,category,value):
-    '''
-    Take details per user in specified dataset with category equal to value
-    Vectorize each
-    Compare each to each and calculate mean
-    Get distribution of means of all users
-    Calculate and label users based on standard deviations away from mean
-    Return updated dataframe
-    '''
-
-    print("Calculating user similarity on dataset where {} equals {}".format(category,value))
-    specified = data[data[category]==value]
-    specified = specified[-specified.category.isna()]
-    print("Found {} Users".format(len(specified)))
-    contents = specified.details
-    
-    # Vectorize details per user
-    vectorizer, vocabulary = build_text_vectorizer(contents,
-                             use_tfidf=True,
-                             use_stemmer=True,
-                             max_features=5000)
-    X = vectorizer(contents)
-    
-    # COMPARE TO THE AVERAGE VECTOR O(n)
-    avg = np.mean(X,axis=0)
-    cosine_diff = []
-    for user in X:
-        cosine_diff.append(cosine_similarity(user.reshape(1,-1),avg.reshape(1,-1))[0][0])
-    
-    # COMPARE EACH TO EACH O(n)^2
-    # cosine_diff = []
-    # for user in X:
-    #     average = []
-    #     for other in X:
-    #         average.append(cosine_similarity(user.reshape(1, -1),other.reshape(1, -1))[0][0])
-    #     cosine_diff.append(np.mean(average))
-
-    data['cosine'] = cosine_diff
-
-    def std_classifier(cosine_vals):
-        mean = cosine_vals.mean()
-        std = cosine_vals.std()
-        std_class = []
-        for each in cosine_vals:
-            diff = abs(each-mean)
-            distance = math.ceil(diff / std)
-            std_class.append(distance)
-        return std_class
-
-    data['std_class'] = std_classifier(data.cosine)
-
-    return data
