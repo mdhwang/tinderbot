@@ -4,7 +4,7 @@ from topics import *
 
 from clean import stats
 
-def calc_city_stats(df):
+def calc_age_stats(df):
     '''
     Take in cleaned and processed data, remove cities with less than 50 data points
     Calculate statistics per city - display top 5
@@ -14,14 +14,15 @@ def calc_city_stats(df):
     - % 
 
     '''
-    reduced = df.groupby('city').filter(lambda x: x["name"].count() > 50)
-    citydf = pd.DataFrame(reduced.groupby('city').size(),columns=["DPs"])
-    citydf['college'] = reduced.groupby('city').apply(lambda x: round(100*x['college'].count()/x['name'].count(),1))
-    citydf['job'] = reduced.groupby('city').apply(lambda x: round(100*x['job'].count()/x['name'].count(),1))
-    citydf['anthem'] = reduced.groupby('city').apply(lambda x: round(100*x['anthem'].count()/x['name'].count(),2))
-    citydf['age_dist'] = reduced.groupby('city').apply(lambda x: x['age'].to_list())
+    reduced = df.groupby('age').filter(lambda x: x["name"].count() > 2000)
+    citydf = pd.DataFrame(reduced.groupby('age').size(),columns=["DPs"])
+    citydf['college'] = reduced.groupby('age').apply(lambda x: round(100*x['college'].count()/x['name'].count(),1))
+    citydf['job'] = reduced.groupby('age').apply(lambda x: round(100*x['job'].count()/x['name'].count(),1))
+    citydf['anthem'] = reduced.groupby('age').apply(lambda x: round(100*x['anthem'].count()/x['name'].count(),2))
+    citydf['city'] = reduced.groupby('age').apply(lambda x: round(100*x['city'].count()/x['name'].count(),2))
+    # citydf['age_dist'] = reduced.groupby('age').apply(lambda x: x['age'].to_list())
     for each in topics:
-        citydf[each] = reduced.groupby('city').apply(lambda x: round(100*x[each].sum()/x['name'].count(),2))
+        citydf[each] = reduced.groupby('age').apply(lambda x: round(100*x[each].sum()/x['name'].count(),2))
 
     return citydf
 
@@ -30,9 +31,10 @@ def top_5(citydf):
     print("-----------HERE ARE YOUR TOP 8---------------")
     print("-----TOP 8 CITIES WITH MOST DATA ENTRIES-----")
     print(citydf.DPs.sort_values(ascending=False).head(8))
+    print("-----TOP 8 CITIES WITH MOST CITIES-----")
+    print(citydf.city.sort_values(ascending=False).head(8))
     print("-----TOP 8 CITIES WITH HIGHEST COLLEGE %-----")
     print(citydf.college.sort_values(ascending=False).head(8))
-    print("---------------------------------------------")
     print("-------TOP 8 CITIES WITH HIGHEST JOB %-------")
     print(citydf.job.sort_values(ascending=False).head(8))
     print("------TOP 8 CITIES WITH HIGHEST ANTHEM %-----")
@@ -57,6 +59,6 @@ def top_5(citydf):
     print(citydf.head())
 
 df = pd.read_csv("data/processed/cleaned_data.csv")
-new = calc_city_stats(df)
+new = calc_age_stats(df)
 top_5(new)
 
