@@ -75,13 +75,31 @@ So Tinder Passport is pretty dope - here is a heatmap of the location of users m
 
 Interactive version coming soon - needs to be hosted somewhere, maybe like heroku
 
-However the majority of the data came from nearby local users in Los Angeles (which is where I was located during the data collection) so I.I.D. is out the window for the entire dataset.  However I think when we zoom into the country level outside the US, the datapoints are still chosen random enough to make insights about the population.
+However the majority of the data came from nearby local users in Los Angeles (which is where I was located during the data collection) so I.I.D. is out the window for the entire dataset.  However I think when we zoom into the city level outside the US, the datapoints are still chosen random enough to make insights about the population.
 
 ![distance_distribution](images/user_distances.png)
 
 Below is the distribution of ages of the profiles in the dataset with a vertical line drawn at the mean age (24)
 
 ![age_distribution](images/user_ages.png)
+
+Now we have an idea of what the overall data looks like - let's dive into the contents of each.  
+
+## Chapter 3 - Into the Nitty Gritty
+
+Below is a word cloud of the details section across the entire dataset.
+
+![aggregate_word_cloud](images/aggregate_word_cloud.png)
+
+Huh, a LOT of Instagram mentions on Tinder.  Who woulda thunk.  I wonder if users are using their profiles in an attempt to grow their IG following to become a more influencial influencer.  Sounds like another project for another time.
+
+In the meantime, I hand picked certain topics I was interested in and checked for keywords relating to that topic.  This list can be easily appended and expanded with future topics or keywords.
+
+Topics Include:
+* COVID-19 / Quarantine Mentions
+* Instagram / Snapchat Mentions
+* 
+
 
 
 
