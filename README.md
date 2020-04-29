@@ -123,7 +123,6 @@ Cities with less than 50 data points were excluded from the below results.
 Percentages are calculated by dividing number of profiles with the particular mention in that city divided over the total number of profiles in that city.
 
 Ex. College % - 59.3% of Tinder uses from Minneapolis display their college / university.
----------------------------------------------
 
 -----------HERE ARE YOUR TOP 8---------------
 
@@ -250,4 +249,31 @@ Ex. College % - 59.3% of Tinder uses from Minneapolis display their college / un
 
 ## Chapter 4 - How Not To Basic
 
+Let's face it - it's a competitive world out there, and Tinder is no different.  Unfortunately, there is a lot of repetition and unoriginality present in profiles.  So the question is, - how can you make a profile that is different than all the other users in your city (aka your competition)?
+
+This next analysis looks at users grouped by a specific city.  I take a look at the details portion of the profile and turn it into a mathematical vector that a computer can relate to rather than human "words."  Now that all users can be represented by vectors, I can take the average amongst population and compare the similarity of each user vector to the average.  After everything is compared, I can then take a look at the distribution and classify each user by number of standard deviations from the mean.  The further away the user is, the less like the other users they are.
+
+Below is a GIF of the distribution of the top 8 cities with the most data points. 
+
+The red line represents the mean, and the blue lines represent the standard deviations.
+
 ![cosine_similarity](images/cosine_similarity.gif)
+
+Next steps will be to apply Topic Modeling to the users near the mean, and also to those far away to determine if there are obvious differences in topics.
+
+## Chapter 5 - Conclusions
+
+Work thus far has only scratched the surface of what is possible with this dataset, but I've had fun gathering the data and analyzing it so far and will continue to work on it.
+
+Future short term work includes:
+* Additional slicing / clustering of data by different variables
+* Improved data visualizations versus lists
+* Interactive Dash App for users to filter data on their own
+* Spotify API intergration for anthem analysis and popular genres per cluster
+
+Future long term work includes:
+* Applying computer vision to profile pictures
+* Creating a trainable model with personal preferences
+
+Hope you enjoyed looking at this project!  Any feedback is welcome - message me on [www.THWDesigns.com](www.THWDesigns.com)
+
