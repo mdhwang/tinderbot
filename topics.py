@@ -1,7 +1,7 @@
 topics = {}
 topics['instagram'] = {'ig','insta','i̇nsta','instagram','📷','📸','@','ig-','instagram-','insta-','insta/','ig:'}
 topics['snapchat'] = {'sc','snap','snapchat','👻','sc-','snapchat-','snap-'}
-topics['premium'] = {'venmo','cashapp','💰'}
+topics['premium'] = {'venmo','cashapp','💰','only fans','onlyfans'}
 topics['covid19'] = {'corona','coronavirus','cv','quarantine','quarantini','covid','covid19','virus','sick','covid-19','wfh','work from home','social distancing','shelter','apocalypse','2020'}
 topics['cannabis'] = {'weed','420','maryjane','smoke','blaze','marijuana','blunt','bong','joint','high','drug','drugs','cannabis'}
 topics['dirty'] = {'pussy','dick','penis','vagina','daddy','🍆','👅','💦','fuck','sex'}
