@@ -71,7 +71,7 @@ Quick discussion about the above:
 
 So Tinder Passport is pretty dope - here is a heatmap of the location of users my bot came across.  As you can see I was paired with users all over the world.  
 
-![heatmap](images/heatmap.png)
+![heatmap](images/Heatmap.png)
 
 Interactive version coming soon - needs to be hosted somewhere, maybe like heroku
 
