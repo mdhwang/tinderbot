@@ -12,11 +12,11 @@ The genesis of this project was heavily inspired by my friend who made a bot who
 
 The bot is Python based and utilizes Selenium to run a WebDriver to simulate a user's session.  Luckily in addition to the popular mobile app, Tinder offers the same service on a computer internet browser.
 
-TINDERBOT BOOT UP GIF
+![boot](images/boot.gif)
 
 I also found it funny that the good people at Tinder offer a "work mode" to help get in some swipes while on the clock.  I'm more of an Alt-Tab man myself tho.
 
-TINDER WORK MODE GIF
+![Work Mode](images/work.gif)
 
 From here, I wrote a series of subfunctions to automatically execute clicks and keystrokes to simulate swiping behaviors.  I also wrote a webscaping script that dives into the HTML to extract relavant information.  The Tinder web app UI is beautiful but incorporates a lot of JavaScript and non-intuitive class names which makes webscraping a moving target.  But where there's a will, there's a way.
 
@@ -24,7 +24,7 @@ I set my bot to the "equal opportunity" setting which swipes right (in the posit
 
 Click on the image below quick video of the bot in action overlayed with Beyonce's hit "Single Ladies" song for obvious reasons:
 
-[![Video](images/cover_image.png)](https://streamable.com/bj5ps3)
+[![Video](images/swipe.gif)](https://streamable.com/bj5ps3)
 
 [Link to video](https://streamable.com/bj5ps3)
 
