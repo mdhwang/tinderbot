@@ -8,6 +8,7 @@ from emoji import UNICODE_EMOJI
 
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize 
+
 stop_words = set(stopwords.words('english')) 
 bad_chars = ["\n","\r",'\'','"',',','.','(',')','&','!','?',':','-','`','...','..','/']
 for each in bad_chars:

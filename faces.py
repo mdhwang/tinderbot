@@ -31,4 +31,4 @@ def find_face(img_path):
     for each in face_arr:
         cv2_imshow(each)
 
-find_face('data/testfaces/sc/1.jpg')
+# find_face('data/testfaces/sc/1.jpg')
